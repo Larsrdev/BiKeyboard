@@ -90,9 +90,14 @@ void error(const __FlashStringHelper*err) {
 
 
 #define NUMBER_OF_ACTIVE_KEYS         12
-#define NUMBER_OF_ALPHA_KEYS          10
 #define NUMBER_OF_KEYCODES            42
-#define NUMBER_OF_KEYS_MUL_ROWS       48
+#define SCANNING_PERIOD_MS            20
+#define LONGPRESS_THRESHOLD_MS        400
+
+int currentPressedTime = 0;
+bool longPressActive = false;
+int previousPressedKey = -1;
+int previousRowNumber = -1;
 
 //Input pins:
 int inputPins[NUMBER_OF_ACTIVE_KEYS]     =                     {A0,             A1,         A2,         A3,         A4,         A5,         5,              6,          9,          10,         11,         12};
@@ -102,9 +107,16 @@ int hid_keyboard_current_pressed_key[NUMBER_OF_ACTIVE_KEYS] =  {0,              
 
 
 int hid_keyboard_row0[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_1,  HID_KEY_2,  HID_KEY_3,  HID_KEY_4,  HID_KEY_5,  HID_KEY_NONE ,  HID_KEY_6,  HID_KEY_7,  HID_KEY_8,  HID_KEY_9,  HID_KEY_0 };
+int hid_keyboard_longpress_row0[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_1,  HID_KEY_2,  HID_KEY_3,  HID_KEY_4,  HID_KEY_5,  HID_KEY_NONE ,  HID_KEY_6,  HID_KEY_7,  HID_KEY_8,  HID_KEY_9,  HID_KEY_0 };
+
 int hid_keyboard_row1[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Q,  HID_KEY_W,  HID_KEY_E,  HID_KEY_R,  HID_KEY_T,  HID_KEY_NONE ,  HID_KEY_Z,  HID_KEY_U,  HID_KEY_I,  HID_KEY_O,  HID_KEY_P };
+int hid_keyboard_longpress_row1[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_Q,  HID_KEY_W,  HID_KEY_E,  HID_KEY_R,  HID_KEY_T,  HID_KEY_NONE ,  HID_KEY_Z,  HID_KEY_U,  HID_KEY_I,  HID_KEY_O,  HID_KEY_P };
+
 int hid_keyboard_row2[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_A,  HID_KEY_S,  HID_KEY_D,  HID_KEY_F,  HID_KEY_G,  HID_KEY_NONE ,  HID_KEY_H,  HID_KEY_J,  HID_KEY_K,  HID_KEY_L,  HID_KEY_SPACE};
+int hid_keyboard_longpress_row2[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_A,  HID_KEY_S,  HID_KEY_D,  HID_KEY_F,  HID_KEY_G,  HID_KEY_NONE ,  HID_KEY_H,  HID_KEY_J,  HID_KEY_K,  HID_KEY_L,  HID_KEY_SPACE};
+
 int hid_keyboard_row3[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Y,  HID_KEY_X,  HID_KEY_C,  HID_KEY_V,  HID_KEY_BACKSPACE,  HID_KEY_NONE ,  HID_KEY_B,  HID_KEY_N,  HID_KEY_M,  HID_KEY_RETURN,  HID_KEY_ESCAPE};
+int hid_keyboard_longpress_row3[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_Y,  HID_KEY_X,  HID_KEY_C,  HID_KEY_V,  HID_KEY_BACKSPACE,  HID_KEY_NONE ,  HID_KEY_B,  HID_KEY_N,  HID_KEY_M,  HID_KEY_RETURN,  HID_KEY_ESCAPE};
 
 int inputKeycodes[NUMBER_OF_KEYCODES] = {
   HID_KEY_A,
@@ -179,20 +191,16 @@ void setup(void){
   delay(500);
 
   Serial.begin(115200);
-  Serial.println(F("Adafruit Bluefruit HID Keyboard Example"));
+  Serial.println(F("BiKeyboard"));
   Serial.println(F("---------------------------------------"));
-
-  /* Initialise the module */
-  Serial.print(F("Initialising the Bluefruit LE module: "));
 
   if ( !ble.begin(VERBOSE_MODE) ){
     error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
   }
-  Serial.println( F("OK!") );
 
   if ( FACTORYRESET_ENABLE ){
     /* Perform a factory reset to make sure everything is in a known state */
-    Serial.println(F("Performing a factory reset: "));
+    Serial.println(F("Performing a factory reset ... "));
     if ( ! ble.factoryReset() ){
       error(F("Couldn't factory reset"));
     }
@@ -201,18 +209,18 @@ void setup(void){
   /* Disable command echo from Bluefruit */
   ble.echo(false);
 
-  Serial.println("Requesting Bluefruit info:");
+  Serial.println("Bluefruit info:");
   /* Print Bluefruit information */
   ble.info();
 
   /* Change the device name to make it easier to find */
-  Serial.println(F("Setting device name to 'BiKeyboard': "));
+  Serial.println(F("Setting device name to 'BiKeyboard' ... "));
   if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=BiKeyboard" )) ) {
     error(F("Could not set device name?"));
   }
 
   /* Enable HID Service */
-  Serial.println(F("Enable HID Service (including Keyboard): "));
+  Serial.println(F("Enable HID Service (including Keyboard) ... "));
   if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) ){
     if ( !ble.sendCommandCheckOK(F( "AT+BleHIDEn=On" ))) {
       error(F("Could not enable Keyboard"));
@@ -251,8 +259,7 @@ void loop(void){
     mapInput();
     sendInput();
 
-    // scaning period is 20 ms
-    delay(20);
+    delay(SCANNING_PERIOD_MS);
   }
 }
 
@@ -279,54 +286,55 @@ void mapInput(void) {
   int offset = 0;
   if(hid_keyboard_current_pressed_key[0] == 1 && !hid_keyboard_current_pressed_key[6] == 1){
     //ROW: QWERTZUI...
-    checkPressedKeys(hid_keyboard_row1, 12);
+    checkPressedKeys(hid_keyboard_row1, 12, 1, hid_keyboard_longpress_row1);
   }else if(!hid_keyboard_current_pressed_key[0] == 1 && hid_keyboard_current_pressed_key[6] == 1){
     //ROW: YXCVBNM...
-    checkPressedKeys(hid_keyboard_row3, 36);
+    checkPressedKeys(hid_keyboard_row3, 36, 3, hid_keyboard_longpress_row3);
   }else if(hid_keyboard_current_pressed_key[0] == 1 && hid_keyboard_current_pressed_key[6] == 1){
     //ROW: 1234567...
-    checkPressedKeys(hid_keyboard_row0, 0);
+    checkPressedKeys(hid_keyboard_row0, 0, 0, hid_keyboard_longpress_row0);
   }else{ //!hid_keyboard_current_pressed_key[0] == 1 && !hid_keyboard_current_pressed_key[6] == 1
     //ROW: ASDFGHJKL...
-    checkPressedKeys(hid_keyboard_row2, 24);
+    checkPressedKeys(hid_keyboard_row2, 24, 2, hid_keyboard_longpress_row2);
   }
 }
 
-void checkPressedKeys(int row[ ], int offset){
+void checkPressedKeys(int row[ ], int offset, int rowNumber, int longPressRow[ ]){
+  // search for pressed keys
   for(int i=0; i<NUMBER_OF_ACTIVE_KEYS; i++){
+
+    // current pressed key found:
     if(hid_keyboard_current_pressed_key[i] == 1){
+
+      // save keycode only if not thumb key
       if(row[i] != HID_KEY_NONE){
+        // Modulo 6 to match bluetooth send size?! - Only way to get it work 
         keyReport.keycode[i%6] = row[i];
-        Serial.println(row[i]);
+
+        // \start longpress check
+        if(rowNumber == previousRowNumber && i == previousPressedKey){
+          if(currentPressedTime >= LONGPRESS_THRESHOLD_MS){
+            keyReport.keycode[i%6] = longPressRow[i];
+          }
+          currentPressedTime = currentPressedTime + SCANNING_PERIOD_MS;
+        }else {
+          currentPressedTime = 0;
+          previousPressedKey = i;
+          previousRowNumber = rowNumber;
+        }
+        // \end longpress check
+        
         break;
       }
     }
+    // nothing or only thumb keys pressed -> send nothing
     keyReport.keycode[i%6] = 0;
   }
-  
-  /*for(int i=0; i<NUMBER_OF_KEYS_MUL_ROWS; i++){
-    int currentI = i%NUMBER_OF_ACTIVE_KEYS;
-    if((i >= offset) && (i < (offset+NUMBER_OF_ACTIVE_KEYS))){
-      if(hid_keyboard_current_pressed_key[currentI] == 1){
-        if(row[currentI] != HID_KEY_NONE){
-          keyReport.keycode[currentI] = row[currentI];
-          break;
-        }
-      }
-    }    
-    keyReport.keycode[i] = 0;      
-  }
-  */
 }
 
 void sendInput(void){
   // Only send if it is not the same as previous report
   if ( memcmp(&previousReport, &keyReport, 8) ){
-
-    for(int i=0; i<8; i++){
-      Serial.print(keyReport.keycode[i]);
-    }
-    Serial.println();
     
     // Send keyboard report
     ble.atcommand("AT+BLEKEYBOARDCODE", (uint8_t*) &keyReport, 8);
