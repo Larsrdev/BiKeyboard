@@ -113,4 +113,30 @@
 #define  HID_KEY_SHIFT_RIGHT        0xE5
 #define  HID_KEY_ALT_RIGHT          0xE6
 #define  HID_KEY_GUI_RIGHT          0xE7
+#define  HID_KEY_OE                 0x31 // english backslash
+#define  HID_KEY_AE                 0x34 // english apostrophe
+#define  HID_KEY_UE                 0x2f // english [
+#define  HID_KEY_AT                 0x14 //altgr
+#define  HID_KEY_SZ                 0x2e
+#define  HID_KEY_QESTIONMARK        0x2D //shift
+#define  HID_KEY_DOUBLECROSS        0x31 
+#define  HID_KEY_APOSTROPHE         0x31 //shift
+#define  HID_KEY_LESSERTHAN         0x64
+#define  HID_KEY_GREATERTHAN        0x64 //shift
+#define  HID_KEY_QUOTATIONMARK      0x1F //shift
+#define  HID_KEY_PERCENT            0x22 //shift
+#define  HID_KEY_AND                0x23 //shift
+#define  HID_KEY_ROUNDBRACKETOPEN   0x25 //shift
+#define  HID_KEY_ROUNDBRACKETCLOSED 0x30 //shift
+#define  HID_KEY_SLASH              0x24 //shift
+#define  HID_KEY_BACKSLASH          0x2D //altgr
+#define  HID_KEY_SEMICOLON          0x36 //shift
+#define  HID_KEY_COMMA              0x36 
+#define  HID_KEY_DOT                0x37
+#define  HID_KEY_DOUBLEDOT          0x37 //shift
+#define  HID_KEY_EURO               HID_KEY_E //altgr
+#define  HID_KEY_CARET              0x35
+#define  HID_KEY_DEGREE             0x35 //shift
+#define  HID_KEY_TILDE              0x30 //altgr
+#define  HID_KEY_EQUALS             0x27 //shift
 

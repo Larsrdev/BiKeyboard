@@ -91,32 +91,91 @@ void error(const __FlashStringHelper*err) {
 
 #define NUMBER_OF_ACTIVE_KEYS         12
 #define NUMBER_OF_KEYCODES            42
-#define SCANNING_PERIOD_MS            20
+#define SCANNING_PERIOD_MS            10
 #define LONGPRESS_THRESHOLD_MS        400
 
 int currentPressedTime = 0;
 bool longPressActive = false;
 int previousPressedKey = -1;
 int previousRowNumber = -1;
+bool multipressOn = false;
+// {thumb_l, UNUSED, little_l, ring_l, middle_l, index_l, thumb_r, index_r, middle_r, ring_r, little_r, UNUSED}
+int multipress_A[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,1,0,0,0,0};
+int multipress_B[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,1,0,0,0,1,0,0,0};
+int multipress_C[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,1,1,0,0,0,0,0,0,0};
+int multipress_D[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,1,0,1,0,0,0,0};
+int multipress_E[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,1,0,0,0,0,0,0};
+int multipress_F[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,1,0,0,0,0,0,1,0,0};
+int multipress_G[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,0,1,1,0};
+int multipress_H[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,1,1,0,0,0,0,0,0,0};
+int multipress_I[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,1,0,0,0,0,0};
+int multipress_J[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,1,1,1,0,0};
+int multipress_K[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,0,0,0,0,0,0,1,0,0};
+int multipress_L[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,1,0,1,0,0,0};
+int multipress_M[NUMBER_OF_ACTIVE_KEYS] =       {0,0,1,1,0,0,0,0,0,0,0,0};
+int multipress_N[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,0,0,0,0,0,0,0,0,0};
+int multipress_O[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,0,0,0,1,0,0,0,0,0};
+int multipress_P[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,1,0,0,1,0,0,0,0,0};
+int multipress_Q[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,1,1,1,0};
+int multipress_R[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,1,0,0,0};
+int multipress_S[NUMBER_OF_ACTIVE_KEYS] =       {0,0,1,0,0,0,0,0,0,0,0,0};
+int multipress_T[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,0,0,1,0};
+int multipress_U[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,0,1,0,0};
+int multipress_V[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,1,1,1,0,0,0,0,0,0};
+int multipress_W[NUMBER_OF_ACTIVE_KEYS] =       {0,0,1,0,0,0,0,0,0,0,1,0};
+int multipress_X[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,0,1,1,0,0,0,0,0,0};
+int multipress_Y[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,1,1,1,0,0,0};
+int multipress_Z[NUMBER_OF_ACTIVE_KEYS] =       {0,0,1,1,1,0,0,0,0,0,0,0};
+int multipress_DOT[NUMBER_OF_ACTIVE_KEYS] =     {0,0,1,1,1,1,0,0,0,0,0,0};
+int multipress_COMMA[NUMBER_OF_ACTIVE_KEYS] =   {0,0,0,0,0,0,0,1,1,1,1,0};
+int multipress_OE[NUMBER_OF_ACTIVE_KEYS] =      {0,0,0,0,1,1,0,1,1,0,0,0};
+int multipress_AE[NUMBER_OF_ACTIVE_KEYS] =      {0,0,0,1,1,0,0,0,1,1,0,0};
+int multipress_UE[NUMBER_OF_ACTIVE_KEYS] =      {0,0,1,1,0,0,0,0,0,1,1,0};
+int multipress_MODE_A[NUMBER_OF_ACTIVE_KEYS] =  {0,0,0,0,0,0,1,1,1,1,1,0};
+int multipress_MODE_B[NUMBER_OF_ACTIVE_KEYS] =  {1,0,1,1,1,1,0,0,0,0,0,0};
+int multipress_MODE_C[NUMBER_OF_ACTIVE_KEYS] =  {1,0,1,1,1,1,1,1,1,1,1,0};
+int multipress_0[NUMBER_OF_ACTIVE_KEYS] =       {0,0,1,0,0,0,0,0,0,0,0,0};
+int multipress_1[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,1,0,0,0,0,0};
+int multipress_2[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,1,0,0,0,0};
+int multipress_3[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,1,0,0,0};
+int multipress_4[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,0,1,0,0};
+int multipress_5[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,0,0,0,0,0,1,0};
+int multipress_6[NUMBER_OF_ACTIVE_KEYS] =       {1,0,0,0,0,0,0,0,0,0,0,0};
+int multipress_7[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,0,1,0,0,0,0,0,0};
+int multipress_8[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,0,1,0,0,0,0,0,0,0};
+int multipress_9[NUMBER_OF_ACTIVE_KEYS] =       {0,0,0,1,0,0,0,0,0,0,0,0};
+int multipress_UP[NUMBER_OF_ACTIVE_KEYS] =      {0,0,0,0,0,0,1,0,0,0,0,0};
+int multipress_DOWN[NUMBER_OF_ACTIVE_KEYS] =    {1,0,0,0,0,0,0,0,0,0,0,0};
+int multipress_LEFT[NUMBER_OF_ACTIVE_KEYS] =    {0,0,0,0,0,1,0,0,0,0,0,0};
+int multipress_RIGHT[NUMBER_OF_ACTIVE_KEYS] =   {0,0,0,0,0,0,0,1,0,0,0,0};
+int multipress_ENTER[NUMBER_OF_ACTIVE_KEYS] =   {0,0,0,0,0,0,0,1,1,1,1,0};
+int multipress_DELETE[NUMBER_OF_ACTIVE_KEYS] =  {0,0,1,1,1,1,0,0,0,0,0,0};
+int multipress_INSERT[NUMBER_OF_ACTIVE_KEYS] =  {0,0,0,0,0,0,0,0,0,1,1,0};
+int multipress_PAGE_UP[NUMBER_OF_ACTIVE_KEYS] = {0,0,0,0,0,0,1,1,0,0,0,0};
+int multipress_PAGE_DW[NUMBER_OF_ACTIVE_KEYS] = {1,0,0,0,1,0,0,0,0,0,0,0};
+int multipress_SHIFT[NUMBER_OF_ACTIVE_KEYS] =   {0,0,1,0,0,0,0,0,0,0,0,0};
+int multipress_TAB[NUMBER_OF_ACTIVE_KEYS] =     {0,0,0,1,0,0,0,0,0,0,0,0};
+int multipress_ESC[NUMBER_OF_ACTIVE_KEYS] =     {0,0,1,1,1,1,0,1,1,1,1,0};
 
 //Input pins:
 int inputPins[NUMBER_OF_ACTIVE_KEYS]     =                     {A0,             A1,         A2,         A3,         A4,         A5,         5,              6,          9,          10,         11,         12};
+int multipressOnSwitch = 13;
 
 //Current active pin:
 int hid_keyboard_current_pressed_key[NUMBER_OF_ACTIVE_KEYS] =  {0,              0,          0,          0,          0,          0,          0,              0,          0,          0,          0,          0};
 
 
-int hid_keyboard_row0[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_1,  HID_KEY_2,  HID_KEY_3,  HID_KEY_4,  HID_KEY_5,  HID_KEY_NONE ,  HID_KEY_6,  HID_KEY_7,  HID_KEY_8,  HID_KEY_9,  HID_KEY_0 };
-int hid_keyboard_longpress_row0[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_1,  HID_KEY_2,  HID_KEY_3,  HID_KEY_4,  HID_KEY_5,  HID_KEY_NONE ,  HID_KEY_6,  HID_KEY_7,  HID_KEY_8,  HID_KEY_9,  HID_KEY_0 };
+int hid_keyboard_row0[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Q,  HID_KEY_W,  HID_KEY_E,  HID_KEY_R,  HID_KEY_T,  HID_KEY_NONE ,  HID_KEY_Z,  HID_KEY_U,  HID_KEY_I,  HID_KEY_O,  HID_KEY_P };
+int hid_keyboard_longpress_row0[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_AT,  HID_KEY_CARET,  HID_KEY_EURO,  HID_KEY_DEGREE,  HID_KEY_NONE,  HID_KEY_NONE ,  HID_KEY_BACKSLASH,  HID_KEY_UE,  HID_KEY_NONE,  HID_KEY_OE,  HID_KEY_NONE };
 
-int hid_keyboard_row1[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Q,  HID_KEY_W,  HID_KEY_E,  HID_KEY_R,  HID_KEY_T,  HID_KEY_NONE ,  HID_KEY_Z,  HID_KEY_U,  HID_KEY_I,  HID_KEY_O,  HID_KEY_P };
-int hid_keyboard_longpress_row1[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_Q,  HID_KEY_W,  HID_KEY_E,  HID_KEY_R,  HID_KEY_T,  HID_KEY_NONE ,  HID_KEY_Z,  HID_KEY_U,  HID_KEY_I,  HID_KEY_O,  HID_KEY_P };
+int hid_keyboard_row1[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_A,  HID_KEY_S,  HID_KEY_D,  HID_KEY_F,  HID_KEY_G,  HID_KEY_NONE ,  HID_KEY_H,  HID_KEY_J,  HID_KEY_K,  HID_KEY_L,  HID_KEY_SPACE };
+int hid_keyboard_longpress_row1[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_AE,  HID_KEY_SZ,  HID_KEY_DOUBLECROSS,  HID_KEY_QESTIONMARK,  HID_KEY_APOSTROPHE,  HID_KEY_NONE ,  HID_KEY_COMMA,  HID_KEY_SEMICOLON,  HID_KEY_DOT,  HID_KEY_DOUBLEDOT,  HID_KEY_NONE };
 
-int hid_keyboard_row2[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_A,  HID_KEY_S,  HID_KEY_D,  HID_KEY_F,  HID_KEY_G,  HID_KEY_NONE ,  HID_KEY_H,  HID_KEY_J,  HID_KEY_K,  HID_KEY_L,  HID_KEY_SPACE};
-int hid_keyboard_longpress_row2[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_A,  HID_KEY_S,  HID_KEY_D,  HID_KEY_F,  HID_KEY_G,  HID_KEY_NONE ,  HID_KEY_H,  HID_KEY_J,  HID_KEY_K,  HID_KEY_L,  HID_KEY_SPACE};
+int hid_keyboard_row2[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Y,  HID_KEY_X,  HID_KEY_C,  HID_KEY_V,  HID_KEY_B,  HID_KEY_NONE ,  HID_KEY_N,  HID_KEY_M,  HID_KEY_NONE,  HID_KEY_BACKSPACE,  HID_KEY_INSERT  };
+int hid_keyboard_longpress_row2[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_LESSERTHAN,  HID_KEY_GREATERTHAN,  HID_KEY_NONE,  HID_KEY_MINUS,  HID_KEY_NONE,  HID_KEY_NONE ,  HID_KEY_NONE,  HID_KEY_NONE,  HID_KEY_NONE,  HID_KEY_BACKSPACE,  HID_KEY_INSERT};
 
-int hid_keyboard_row3[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_Y,  HID_KEY_X,  HID_KEY_C,  HID_KEY_V,  HID_KEY_BACKSPACE,  HID_KEY_NONE ,  HID_KEY_B,  HID_KEY_N,  HID_KEY_M,  HID_KEY_RETURN,  HID_KEY_ESCAPE};
-int hid_keyboard_longpress_row3[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_Y,  HID_KEY_X,  HID_KEY_C,  HID_KEY_V,  HID_KEY_BACKSPACE,  HID_KEY_NONE ,  HID_KEY_B,  HID_KEY_N,  HID_KEY_M,  HID_KEY_RETURN,  HID_KEY_ESCAPE};
+int hid_keyboard_row3[NUMBER_OF_ACTIVE_KEYS] =                 { HID_KEY_NONE,  HID_KEY_1,  HID_KEY_2,  HID_KEY_3,  HID_KEY_4,  HID_KEY_5,  HID_KEY_NONE ,  HID_KEY_6,  HID_KEY_7,  HID_KEY_8,  HID_KEY_9,  HID_KEY_0};
+int hid_keyboard_longpress_row3[NUMBER_OF_ACTIVE_KEYS] =       { HID_KEY_NONE,  HID_KEY_NONE,  HID_KEY_QUOTATIONMARK,  HID_KEY_NONE,  HID_KEY_EURO,  HID_KEY_PERCENT,  HID_KEY_NONE ,  HID_KEY_AND,  HID_KEY_SLASH,  HID_KEY_ROUNDBRACKETOPEN,  HID_KEY_ROUNDBRACKETCLOSED,  HID_KEY_EQUALS};
 
 int inputKeycodes[NUMBER_OF_KEYCODES] = {
   HID_KEY_A,
@@ -245,6 +304,7 @@ void setup(void){
   // Set up input Pins
   for(int i=0; i < NUMBER_OF_ACTIVE_KEYS; i++){
     pinMode(inputPins[i], INPUT_PULLUP);
+    pinMode(multipressOnSwitch, INPUT_PULLUP);
   }
 }
 
@@ -256,7 +316,11 @@ void setup(void){
 void loop(void){
   if ( ble.isConnected() ){
     getBoardInput();
-    mapInput();
+    if(multipressOn){
+      mapMultiPressInput();
+    }else{
+      mapLongPressInput();
+    }
     sendInput();
 
     delay(SCANNING_PERIOD_MS);
@@ -270,6 +334,12 @@ void loop(void){
 /**************************************************************************/
 void getBoardInput(void){
   // https://learn.adafruit.com/custom-wireless-bluetooth-cherry-mx-gamepad?view=all 
+  if(digitalRead(multipressOnSwitch) == LOW){
+    multipressOn = false;
+    
+  }else{
+    multipressOn = true;
+  }
    
   for(int i=0; i<NUMBER_OF_ACTIVE_KEYS; i++){
     // GPIO is active low
@@ -281,8 +351,83 @@ void getBoardInput(void){
   }
 }
 
-void mapInput(void) {
-  
+void mapMultiPressInput(void){
+  resetKeyReport();
+  comparePressedKeysAndMapToHIDKey(multipress_A, HID_KEY_A);
+  comparePressedKeysAndMapToHIDKey(multipress_B, HID_KEY_B);
+  comparePressedKeysAndMapToHIDKey(multipress_C, HID_KEY_C);
+  comparePressedKeysAndMapToHIDKey(multipress_D, HID_KEY_D);
+  comparePressedKeysAndMapToHIDKey(multipress_E, HID_KEY_E);
+  comparePressedKeysAndMapToHIDKey(multipress_F, HID_KEY_F);
+  comparePressedKeysAndMapToHIDKey(multipress_G, HID_KEY_G);
+  comparePressedKeysAndMapToHIDKey(multipress_H, HID_KEY_H);
+  comparePressedKeysAndMapToHIDKey(multipress_I, HID_KEY_I);
+  comparePressedKeysAndMapToHIDKey(multipress_J, HID_KEY_J);
+  comparePressedKeysAndMapToHIDKey(multipress_K, HID_KEY_K);
+  comparePressedKeysAndMapToHIDKey(multipress_L, HID_KEY_L);
+  comparePressedKeysAndMapToHIDKey(multipress_M, HID_KEY_M);
+  comparePressedKeysAndMapToHIDKey(multipress_N, HID_KEY_N);
+  comparePressedKeysAndMapToHIDKey(multipress_O, HID_KEY_O);
+  comparePressedKeysAndMapToHIDKey(multipress_P, HID_KEY_P);
+  comparePressedKeysAndMapToHIDKey(multipress_Q, HID_KEY_Q);
+  comparePressedKeysAndMapToHIDKey(multipress_R, HID_KEY_R);
+  comparePressedKeysAndMapToHIDKey(multipress_S, HID_KEY_S);
+  comparePressedKeysAndMapToHIDKey(multipress_T, HID_KEY_T);
+  comparePressedKeysAndMapToHIDKey(multipress_U, HID_KEY_U);
+  comparePressedKeysAndMapToHIDKey(multipress_V, HID_KEY_V);
+  comparePressedKeysAndMapToHIDKey(multipress_W, HID_KEY_W);
+  comparePressedKeysAndMapToHIDKey(multipress_X, HID_KEY_X);
+  comparePressedKeysAndMapToHIDKey(multipress_Y, HID_KEY_Y);
+  comparePressedKeysAndMapToHIDKey(multipress_Z, HID_KEY_Z);
+  // comparePressedKeysAndMapToHIDKey(multipress_DOT
+  // comparePressedKeysAndMapToHIDKey(multipress_COMMA
+  // comparePressedKeysAndMapToHIDKey(multipress_OE
+  // comparePressedKeysAndMapToHIDKey(multipress_AE
+  // comparePressedKeysAndMapToHIDKey(multipress_UE
+  // comparePressedKeysAndMapToHIDKey(multipress_MODE_A
+  // comparePressedKeysAndMapToHIDKey(multipress_MODE_B
+  // comparePressedKeysAndMapToHIDKey(multipress_MODE_C
+  // comparePressedKeysAndMapToHIDKey(multipress_0
+  // comparePressedKeysAndMapToHIDKey(multipress_1
+  // comparePressedKeysAndMapToHIDKey(multipress_2
+  // comparePressedKeysAndMapToHIDKey(multipress_3
+  // comparePressedKeysAndMapToHIDKey(multipress_4
+  // comparePressedKeysAndMapToHIDKey(multipress_5
+  // comparePressedKeysAndMapToHIDKey(multipress_6
+  // comparePressedKeysAndMapToHIDKey(multipress_7
+  // comparePressedKeysAndMapToHIDKey(multipress_8
+  // comparePressedKeysAndMapToHIDKey(multipress_9
+  // comparePressedKeysAndMapToHIDKey(multipress_UP
+  // comparePressedKeysAndMapToHIDKey(multipress_DOWN
+  // comparePressedKeysAndMapToHIDKey(multipress_LEFT
+  // comparePressedKeysAndMapToHIDKey(multipress_RIGHT
+  // comparePressedKeysAndMapToHIDKey(multipress_ENTER
+  // comparePressedKeysAndMapToHIDKey(multipress_DELETE
+  // comparePressedKeysAndMapToHIDKey(multipress_INSERT
+  // comparePressedKeysAndMapToHIDKey(multipress_PAGE_UP
+  // comparePressedKeysAndMapToHIDKey(multipress_PAGE_DW
+  // comparePressedKeysAndMapToHIDKey(multipress_SHIFT
+  // comparePressedKeysAndMapToHIDKey(multipress_TAB
+  // comparePressedKeysAndMapToHIDKey(multipress_ESC
+}
+
+void resetKeyReport(void){
+  keyReport.keycode[1] = 0;
+}
+
+void comparePressedKeysAndMapToHIDKey(int keyMap[], int key){
+  for(int i=0; i<NUMBER_OF_ACTIVE_KEYS; i++){
+    if(hid_keyboard_current_pressed_key[i] != keyMap[i]){
+      return;
+    }
+  }
+  Serial.print("Multipress erkannt: ");
+  Serial.print(key);
+  Serial.println();
+  keyReport.keycode[1] = key;
+}
+
+void mapLongPressInput(void) {
   int offset = 0;
   if(hid_keyboard_current_pressed_key[0] == 1 && !hid_keyboard_current_pressed_key[6] == 1){
     //ROW: QWERTZUI...
